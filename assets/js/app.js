@@ -323,7 +323,7 @@
       '<rect x="2" y="6" width="20" height="12" rx="2.5"/>' +
       '<path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M6 14h.01M18 14h.01M9.5 14h5"/></svg></div>' +
       "<h1>Typing Tutor</h1>" +
-      '<p class="sub">Touch typing course in ten lessons.</p>' +
+      '<p class="sub">Touch typing course in ' + TT.LESSONS.length + " lessons.</p>" +
       '<div class="hero-stats">' +
       '<div class="stat"><span class="k">Best speed</span><span class="v">' + bestOverall() + "<small>WPM</small></span></div>" +
       '<div class="stat"><span class="k">Lessons passed</span><span class="v">' + passedCount() + "<small>/" + TT.LESSONS.length + "</small></span></div>" +
@@ -901,6 +901,7 @@
       '<div class="panel"><h3>Thai course (Kedmanee)</h3>' +
       "<p>Switch course with the pill at the right of the menu bar, or in <b>Options</b>, then set the operating system keyboard to Thai (Thailand). The on-screen keyboard shows Kedmanee legends: the unshifted character large, the shifted character small.</p>" +
       "<p>Thai words are written without spaces; a space separates clauses only. Vowels that sit above, below, before or after a consonant are separate keystrokes - type them in reading order.</p>" +
+      "<p>Kedmanee puts a second layer of letters on the same keys under Shift. The course teaches it row by row: the home-row Shift lesson adds <span class=\"hi\">ฤ ฆ ฏ โ ฌ ษ ศ ซ</span> (โ is Shift+F, ษ is Shift+K), the top-row Shift lesson adds <span class=\"hi\">ฎ ฑ ธ ณ ญ ฐ</span> with the marks ◌ํ and ◌๊, and the bottom-row Shift lesson adds <span class=\"hi\">ฉ ฮ ฬ ฒ ฦ</span> with ◌ฺ and ◌์. Hold Shift with the opposite hand and leave the typing finger on its home key.</p>" +
       "<p>Thai digits ๐-๙ are Shift with the number row: ๐ on Shift+Q, ๑-๔ on Shift+2-5 and ๕-๙ on Shift+8-=. The 6 and 7 keys are ◌ุ/◌ู and ◌ึ/฿ instead. The marks ◌็ and ◌์ are Shift+H and Shift+N. Latin digits come from the numeric keypad.</p>" +
       "<p>You do not have to switch the operating system keyboard: pressing the US key at the same position is accepted too, so <kbd>a</kbd> <kbd>s</kbd> <kbd>d</kbd> <kbd>f</kbd> types <span class=\"hi\">ฟหกด</span>. Turn this off in Options if you want strict Thai input.</p>" +
       '<p class="dim">The interface, the menus and this help stay in English.</p></div>' +

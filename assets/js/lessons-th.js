@@ -1,11 +1,15 @@
-/* Typing Tutor - Thai course (Kedmanee layout). UI stays English, exercises are Thai. */
+/* Typing Tutor - Thai course (Kedmanee layout). UI stays English, exercises are Thai.
+ * Each keyboard row is taught unshifted first, then a dedicated Shift lesson for the
+ * same row introduces the shifted layer (ฤ ฆ ฏ โ ษ ... on the home row, ฎ ฑ ธ ณ ญ ฐ on
+ * the top row, ฉ ฮ ฬ ฒ ฦ and ◌ฺ ◌์ on the bottom row). Every exercise uses only keys
+ * introduced up to that point. */
 window.TT = window.TT || {};
 
 var TH_LESSONS = [
   {
     id: "TH01",
     name: "Lesson  1   Home Row  ฟ ห ก ด  เ ◌้ ◌่ ◌า ส ว ง",
-    focus: "Middle row: a s d f g h j k l ; '  ->  ฟ ห ก ด เ ◌้ ◌่ ◌า ส ว ง. Fingers rest on ฟ ห ก ด and ◌า ส ว",
+    focus: "Middle row: a s d f g h j k l ;  ->  ฟ ห ก ด เ ◌้ ◌่ ◌า ส ว ง. Fingers rest on ฟ ห ก ด and ◌า ส ว",
     keys: "asdfjkl;'",
     passWpm: 10,
     passAcc: 95,
@@ -29,7 +33,19 @@ var TH_LESSONS = [
   },
   {
     id: "TH03",
-    name: "Lesson  3   Top Row Left  ๆ ไ ◌ำ พ ◌ะ",
+    name: "Lesson  3   Home Row Shift  ฤ ฆ ฏ โ ฌ ษ ศ ซ",
+    focus: "Hold Shift with the opposite hand and keep the home-row fingers in place. Shift+F gives โ, Shift+D gives ฏ, Shift+K gives ษ, Shift+L gives ศ",
+    keys: "shift asdfghjkl;",
+    passWpm: 14,
+    passAcc: 95,
+    text: `ฤฆฏโ ฌษศซ ฤฆฏโ ฌษศซ
+ก๋ ก็ กฏ เศษ โสด
+หาด เสา ฟ้า กวด หวง โสด
+กฏเศษ โสดหาด เสาฟ้า หวงกวด`
+  },
+  {
+    id: "TH04",
+    name: "Lesson  4   Top Row Left  ๆ ไ ◌ำ พ ◌ะ",
     focus: "Keys q w e r t  ->  ๆ ไ ◌ำ พ ◌ะ. Reach up from the middle row and snap back",
     keys: "qwert",
     passWpm: 15,
@@ -40,8 +56,8 @@ var TH_LESSONS = [
 ดำๆ ไฟๆ พาๆ กะๆ สะๆ`
   },
   {
-    id: "TH04",
-    name: "Lesson  4   Top Row Right  ◌ั ◌ี ร น ย บ ล",
+    id: "TH05",
+    name: "Lesson  5   Top Row Right  ◌ั ◌ี ร น ย บ ล",
     focus: "Keys y u i o p [ ]  ->  ◌ั ◌ี ร น ย บ ล. Right pinky takes p [ ]",
     keys: "ypi[]",
     passWpm: 17,
@@ -52,8 +68,20 @@ var TH_LESSONS = [
 ไหว้ เรียน บ้าน ลง หลง รัน`
   },
   {
-    id: "TH05",
-    name: "Lesson  5   Bottom Row  ผ ป แ อ ◌ิ ◌ื ท ม ใ ฝ",
+    id: "TH06",
+    name: "Lesson  6   Top Row Shift  ฎ ฑ ธ ณ ญ ฐ",
+    focus: "Shift on the top row. Shift+T gives ธ, Shift+P gives ญ, Shift+[ gives ฐ, Shift+Y gives ◌ํ, Shift+U gives ◌๊",
+    keys: "shift ertup[]",
+    passWpm: 18,
+    passAcc: 95,
+    text: `ฎ ฑ ธ ณ ญ ฐ
+ธํ ธ๊ ฐาน ธง
+ญาณ ธง ฐาน ญาณฐาน
+ธงฐาน ญาณฐาน ธงญาณ ฐานธง`
+  },
+  {
+    id: "TH07",
+    name: "Lesson  7   Bottom Row  ผ ป แ อ ◌ิ ◌ื ท ม ใ ฝ",
     focus: "Bottom row: z x c v b n m , . /  ->  ผ ป แ อ ◌ิ ◌ื ท ม ใ ฝ. One finger only, the hand stays put",
     keys: "zxcvbnm,./",
     passWpm: 19,
@@ -65,8 +93,20 @@ var TH_LESSONS = [
 แม่ทำอาหาร นักเรียนเรียนดี`
   },
   {
-    id: "TH06",
-    name: "Lesson  6   Number Row Letters  ๅ / - ภ ถ ค ต จ ข ช",
+    id: "TH08",
+    name: "Lesson  8   Bottom Row Shift  ฉ ฮ ฒ ฬ ฦ",
+    focus: "Shift on the bottom row. Shift+C gives ฉ, Shift+. gives ฬ, Shift+N gives ◌์, Shift+B gives ◌ฺ",
+    keys: "shift zxcvbnm,./",
+    passWpm: 19,
+    passAcc: 95,
+    text: `ฉ ฮ ฒ ฬ ฦ
+ฉฺ ฉ์ ฉลาด ฉาย
+ฉีก กีฬา ฉลอง ฉลาด
+กีฬา ฉลาด ฉาย ฉีก`
+  },
+  {
+    id: "TH09",
+    name: "Lesson  9   Number Row Letters  ๅ / - ภ ถ ค ต จ ข ช",
     focus: "Number row letters: 1 2 3 4 5 6 7 8 9 0 - =  ->  ๅ / - ภ ถ ◌ุ ◌ึ ค ต จ ข ช. Shift+F gives โ",
     keys: "1234567890-=",
     passWpm: 20,
@@ -74,12 +114,12 @@ var TH_LESSONS = [
     text: `ๅ/-ภถุึคตจขช  ๅ/-ภถุึคตจขช
 คน รถ ชื่อ ตลาด อ่าน เขียน เล่น
 เขาอ่านหนังสือไทย
-พูดไทยได้ไหม
+เขียนหนังสือ
 คนเมืองกับคนบ้านนอก`
   },
   {
-    id: "TH07",
-    name: "Lesson  7   Thai Digits  ๐ ๑ ๒ ๓ ๔ ๕ ๖ ๗ ๘ ๙",
+    id: "TH10",
+    name: "Lesson 10   Thai Digits  ๐ ๑ ๒ ๓ ๔ ๕ ๖ ๗ ๘ ๙",
     focus: "Shift + the number row gives Thai digits: ๐ on Shift+Q, ๑-๔ on Shift+2-5, ๕-๙ on Shift+8-=. The 6 and 7 keys are ◌ุ/◌ู and ◌ึ/฿",
     keys: "shift q,2-5,8-=",
     passWpm: 18,
@@ -91,8 +131,8 @@ var TH_LESSONS = [
 โทร ๐๒-๑๒๓-๔๕๖๗`
   },
   {
-    id: "TH08",
-    name: "Lesson  8   Punctuation  And  Latin Digits",
+    id: "TH11",
+    name: "Lesson 11   Punctuation  And  Latin Digits",
     focus: "Shift gives . , ? ( ) \" on the Thai keyboard. Latin digits come from the numeric keypad",
     keys: "shift+.,?()\"",
     passWpm: 21,
@@ -104,8 +144,8 @@ var TH_LESSONS = [
 ขอขอบคุณมากครับ`
   },
   {
-    id: "TH09",
-    name: "Lesson  9   Prose Drill  Technique",
+    id: "TH12",
+    name: "Lesson 12   Prose Drill  Technique",
     focus: "Continuous Thai prose. No spaces between words, one space between clauses",
     keys: "mixed",
     passWpm: 24,
@@ -116,8 +156,8 @@ var TH_LESSONS = [
 ฝึกทุกวันวันละสิบนาทีความเร็วจะเพิ่มขึ้นเอง`
   },
   {
-    id: "TH10",
-    name: "Lesson 10   Prose Drill  Everyday",
+    id: "TH13",
+    name: "Lesson 13   Prose Drill  Everyday",
     focus: "Longer text. Keep accuracy above ninety five percent",
     keys: "mixed",
     passWpm: 26,
