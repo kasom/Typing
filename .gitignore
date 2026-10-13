@@ -1,0 +1,6 @@
+# opencode tooling / local agent config
+.opencode/
+
+# OS cruft
+.DS_Store
+Thumbs.db

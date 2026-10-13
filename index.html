@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#070b11">
+<title>Typing Tutor</title>
+<link rel="stylesheet" href="assets/css/tutor.css">
+<script>
+/* the theme has to be on <html> before the first paint, or the page flashes dark
+   for the length of a light-theme load; app.js owns the same storage key */
+try{
+  var t = localStorage.getItem("tt.theme.v1");
+  if (t !== "light" && t !== "dark")
+    t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  document.documentElement.dataset.theme = t;
+}catch(e){}
+</script>
+</head>
+<body>
+<div id="screen">
+  <header class="menubar" id="menubar">
+    <span class="brand">Typing Tutor</span>
+    <nav id="menu"></nav>
+    <button class="ver" id="course" type="button" title="Switch course">
+      <span class="ver-txt"><span class="ver-kbd"></span><span class="ver-course"></span></span><span class="ver-swap" aria-hidden="true">&#8646;</span>
+    </button>
+    <button class="iconbtn" id="theme" type="button" title="Switch colour theme" aria-label="Switch colour theme">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 0 0 17z" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>
+  </header>
+
+  <main id="view" tabindex="-1"></main>
+
+  <footer class="hotkeys" id="hotkeys"></footer>
+</div>
+<script src="assets/js/lessons.js"></script>
+<script src="assets/js/lessons-th.js"></script>
+<script src="assets/js/keyboard.js"></script>
+<script src="assets/js/engine.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
