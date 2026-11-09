@@ -31,8 +31,9 @@ locally in your browser via `localStorage`; nothing is sent anywhere.
   position (e.g. `asdf` types `ฟหกด`), so no OS keyboard switch is required.
 - **Strict mode** — wrong characters stay in the text and must be erased with
   Backspace before a lesson can be completed.
-- **Custom drills** — paste any text and practise it (unscored). Each course keeps
-  its own drill text, matching the way records are kept per course.
+- **Custom drills** — paste any text and practise it (no pass target, but your best
+  speed on it is recorded). Each course keeps its own drill text, matching the way
+  records are kept per course.
 - **Dark / light theme** — follows your OS preference by default and can be
   overridden; applied before first paint to avoid a flash.
 - **Sound feedback** — subtle key-click, error and completion tones synthesised

@@ -126,10 +126,10 @@ TT.altChars = function (ch) {
   if (!n || n.numpad || !n.key || n.key.length !== 1) return [];
   var pair = TT.layout.map[n.key], us = TT.LAYOUTS.us.map[n.key];
   if (!pair || !us) return [];
-  var i = n.shift ? 1 : 0, out = [];
-  if (us[i] && us[i] !== ch) out.push(us[i]);
-  if (pair[i] && pair[i] !== ch) out.push(pair[i]);
-  return out;
+  var i = n.shift ? 1 : 0;
+  /* only the US character is an alternative here: pair[i] is by construction the
+     character we were asked about, since CHAR_MAP is built from this same table */
+  return us[i] && us[i] !== ch ? [us[i]] : [];
 };
 
 var FINGER_OF = {};

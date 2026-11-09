@@ -33,8 +33,8 @@ var TH_LESSONS = [
   },
   {
     id: "TH03",
-    name: "Lesson  3   Home Row Shift  ฤ ฆ ฏ โ ฌ ษ ศ ซ",
-    focus: "Hold Shift with the opposite hand and keep the home-row fingers in place. Shift+F gives โ, Shift+D gives ฏ, Shift+K gives ษ, Shift+L gives ศ",
+    name: "Lesson  3   Home Row Shift  ฤ ฆ ฏ โ ฌ ◌็ ◌๋ ษ ศ ซ",
+    focus: "Hold Shift with the opposite hand and keep the home-row fingers in place. Shift+F gives โ, Shift+D gives ฏ, Shift+H gives ◌็, Shift+J gives ◌๋, Shift+K gives ษ",
     keys: "shift asdfghjkl;",
     passWpm: 14,
     passAcc: 95,

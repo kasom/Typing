@@ -588,11 +588,15 @@ body.crisp, body.crisp *{
   text-shadow:none !important;
   font-variant-ligatures:none;
 }
-body.crisp .passage{font-size:24px}
+/* the passage size stays on the --fs token: a direct font-size here outranks
+   body.course-th's --fs and every later responsive rule that sets it, which
+   leaves two competing ways to size the same text. The clamp keeps the same
+   scaling curve as the default, capped at the fixed size crisp mode wants. */
+body.crisp .passage{--fs:clamp(19px,1.9vw,24px)}
 body.crisp .kbd .key{font-size:13px}
 body.crisp .kbd .key small{font-size:9px}
 body.crisp .status .v{font-size:20px}
-body.crisp.course-th .passage{font-size:28px}
+body.crisp.course-th .passage{--fs:clamp(22px,2.2vw,28px)}
 body.crisp.course-th .kbd .key{font-size:19px}
 body.crisp.course-th .kbd .key small{font-size:11px}
 
@@ -626,6 +630,11 @@ body.crisp.course-th .kbd .key small{font-size:11px}
   .passage{padding:14px 14px; height:clamp(180px, 34vh, 300px)}
   .kbd-wrap{padding:10px}
   .kbd .key{min-height:38px; font-size:11px; border-radius:7px}
+  /* the crisp block is more specific than the line above, so it has to be
+     answered inside the breakpoint or the key legends keep their desktop size
+     in a ten-key row and overflow the cap */
+  body.crisp .kbd .key{font-size:11px}
+  body.crisp.course-th .kbd .key{font-size:14px}
   .status .stat{flex:1 1 70px; min-width:70px; padding:2px 10px}
   .status .v{font-size:18px}
   ul.keys{columns:1}
