@@ -413,7 +413,9 @@ textarea{min-height:130px; resize:vertical; line-height:1.6}
   scrollbar-width:thin;
   transition:border-color .2s;
 }
-.passage span{color:var(--p-pending); position:relative}
+/* scroll-margin keeps the caret clear of the frame when the passage scrolls itself
+   to follow it (engine.js scrollToCur); Thai ascenders need more room, see below */
+.passage span{color:var(--p-pending); position:relative; scroll-margin:.6em 0}
 .passage span.done{color:var(--p-done)}
 .passage span.err{color:var(--bad); background:var(--bad-bg); border-radius:4px; text-decoration:underline wavy var(--bad); text-underline-offset:.28em}
 .passage span.cur{background:var(--p-cur); border-radius:4px}

@@ -221,7 +221,7 @@
        0.0 WPM entry that Progress then lists as an exercise practised at zero
        speed, so a record is only created once something can go in it; an
        existing record still counts the attempt. */
-    if (!best[item.id] && st.keystrokes < MIN_SCORED && !pass) return;
+    if (!best[item.id] && st.keystrokes < MIN_SCORED) return;
     var b = best[item.id] || fixBest(null);
     b.tries = (b.tries || 0) + 1;
     /* WPM and ACC have to come from the same run: keeping the fastest speed and
@@ -458,7 +458,7 @@
         go("session", hit.item);
       } else {
         S.sel.tests = testById(hit.item.id);
-        go("session", hit.item, last.limit || 120);
+        go("session", hit.item, last.limit || DEF_DUR * 60);
       }
     };
   }
@@ -474,8 +474,8 @@
     }).join("");
     view.innerHTML =
       '<div class="page-head"><div><h1>Timed tests</h1>' +
-      '<p class="dim">A test is timed. When the clock reaches zero the run is scored, pass or not. ' +
-      "Errors are not corrected after the time expires.</p></div>" +
+      '<p class="dim">A test is timed. When the clock reaches zero the run is scored as it stands - a test has ' +
+      "no pass mark, only the best you have done on it. Errors are not corrected after the time expires.</p></div>" +
       '<div class="actions"><div class="seg" role="radiogroup" aria-label="Test duration">' +
       DUR_OPTS.map(function (m) {
         return '<label class="segopt"><input type="radio" name="dur" value="' + m + '"' +
@@ -939,7 +939,7 @@
       '<div class="page-head"><div><h1>Help</h1><p class="dim">How the course works, and the keys that drive it.</p></div></div>' +
       '<div class="cols"><div class="panel"><h3>How the course works</h3>' +
       "<p>Each lesson teaches one group of keys. Type the text exactly as shown. Characters brighten as you type them correctly; wrong characters are marked in red.</p>" +
-      "<p>Wrong characters stay in the text until you press <kbd>Backspace</kbd> to erase them. A lesson is finished only when the text is complete and error free.</p>" +
+      "<p>Wrong characters stay in the text until you press <kbd>Backspace</kbd> to erase them. A lesson is finished only when the text is complete and error free - turn off <b>Errors must be erased</b> in Options if you would rather run on over the mistakes.</p>" +
       "<p>A lesson is passed at the required speed and accuracy - both are listed on the lesson menu; passing unlocks the next lesson.</p>" +
       "<p>In a timed test the clock decides the end of the run. Speed is measured in words per minute: five correct characters equal one word.</p>" +
       '</div><div class="panel"><h3>Technique</h3>' +
@@ -1079,9 +1079,12 @@
   function nextLesson() {
     var cur = S.session && S.session.state.item;
     var i = cur ? lessonById(cur.id) : S.sel.lessons;
+    /* a test or a custom drill is not in the lesson list, so there is no next
+       lesson to walk to: refuse rather than dropping the typist into the tests */
+    if (i < 0) { sndErr(); return; }
     /* past the last lesson there is nothing left to unlock - send the typist to
        the timed tests instead of restarting the lesson they are already on */
-    if (i < 0 || i + 1 >= TT.LESSONS.length) { go("tests"); return; }
+    if (i + 1 >= TT.LESSONS.length) { go("tests"); return; }
     /* F10 must not walk past the gate the lesson menu enforces: the next lesson
        only opens once the current one is actually passed */
     if (!unlocked(i + 1)) { sndErr(); return; }
