@@ -43,13 +43,13 @@ half hall shall flash glass had`
     id: "L04",
     name: "Lesson  4   Top Row  Q W E R T  Y U I O P",
     focus: "Top row. Reach up from the home row, snap back down",
-    keys: "qwertyuiopasdfjkl;",
+    keys: "qwertyuiopasdfghjkl;",
     passWpm: 18,
     passAcc: 95,
     text: `qwer tyui op qwer tyui op
 the her here there where why
 quiet quite white write your
-power tower river water over`
+power tower water quote wrote`
   },
   {
     id: "L05",
@@ -153,6 +153,7 @@ TT.COURSES.en = {
   name: "English",
   layout: "us",
   lang: "en",
+  css: "",
   lessons: EN_LESSONS,
   tests: EN_TESTS
 };

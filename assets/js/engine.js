@@ -63,7 +63,9 @@ TT.createSession = function (item, container, opts) {
  * state of its worst member.
  */
 var MARK = /[\u0E31\u0E34-\u0E3A\u0E33\u0E47-\u0E4E]/;
-var LEAD = /[\u0E40-\u0E45]/;
+/* U+0E40-U+0E44 are the pre-posed vowels (เ แ โ ใ ไ). U+0E45 (ๅ) is a spacing
+   letter like ก or า, so it hosts the marks after it and stays out of this set. */
+var LEAD = /[\u0E40-\u0E44]/;
 var SPACE = /\s/;
 
   /* one element renders the code points [from,to); `caret` is the element the

@@ -101,7 +101,7 @@ TT.keyForChar = function (ch) {
   var hit = CHAR_MAP[ch];
   if (hit) return hit;
   /* Latin digits are not printed on a Thai Kedmanee keyboard - they come from the numeric keypad */
-  if (/^[0-9]$/.test(ch) && !CHAR_MAP[ch]) {
+  if (/^[0-9]$/.test(ch)) {
     return { key: "Numpad" + ch, shift: false, finger: "rp", numpad: true };
   }
   var low = TT.LAYOUTS.us.map[ch.toLowerCase()] ? ch.toLowerCase() : null;

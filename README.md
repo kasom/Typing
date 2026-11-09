@@ -5,7 +5,7 @@ dependencies, no framework — just static HTML, CSS and vanilla JavaScript you
 can open directly or drop on any web server.
 
 It ships with two full courses — **English (QWERTY)** and **Thai (Kedmanee)** —
-each with ten progressive lessons, four timed tests, a custom-drill editor, an
+each with progressive lessons and timed tests, a custom-drill editor, an
 on-screen keyboard with per-finger colours, live WPM/accuracy stats, and a
 progress report. Everything (settings, best scores and history) is stored
 locally in your browser via `localStorage`; nothing is sent anywhere.
@@ -14,8 +14,9 @@ locally in your browser via `localStorage`; nothing is sent anywhere.
 
 - **Two courses** — English on QWERTY and Thai on Kedmanee (TIS 820). Switch
   from the menu-bar pill or in Options; records are kept per course.
-- **10 lessons + 4 timed tests per course** — a lesson unlocks the next one once
-  you hit its target speed at 95% accuracy or better.
+- **10 English lessons, 13 Thai lessons, 4 timed tests per course** — a lesson
+  unlocks the next one once you hit its target speed at its target accuracy or
+  better (every lesson in the shipped course data asks for 95%).
 - **On-screen keyboard** — colour-coded by finger, highlights the next key to
   press, lights up the physical key you actually hit, and is clickable so the
   course also works on tablets.
@@ -69,6 +70,8 @@ Then visit <http://localhost:8000>.
 | `F9` | Retry the current exercise |
 | `F10` | Next lesson |
 | `Backspace` | Erase a wrong character |
+| `↑` `↓` | Move the selection in the lesson / test list |
+| `Enter` | Start the selected lesson or test |
 
 ## How scoring works
 
@@ -101,6 +104,8 @@ model, then the engine, then the application shell.
 ## Browser support
 
 Uses standard, widely supported web platform features — `localStorage`, the
-Web Audio API, `KeyboardEvent.code`, and ES5-style JavaScript throughout (no
-transpile needed). Works in current Chrome, Firefox, Edge and Safari, and on
-touch tablets via the clickable keyboard.
+Web Audio API, `KeyboardEvent.code`, and JavaScript written in an ES5 style with
+a few widely supported ES6 conveniences (template literals, `Object.assign`,
+`Array.from`), so no transpile step is needed. The stylesheet uses `color-mix()`
+and logical properties, which need a current browser. Works in current Chrome,
+Firefox, Edge and Safari, and on touch tablets via the clickable keyboard.

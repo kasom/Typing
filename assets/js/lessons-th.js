@@ -10,7 +10,7 @@ var TH_LESSONS = [
     id: "TH01",
     name: "Lesson  1   Home Row  ฟ ห ก ด  เ ◌้ ◌่ ◌า ส ว ง",
     focus: "Middle row: a s d f g h j k l ;  ->  ฟ ห ก ด เ ◌้ ◌่ ◌า ส ว ง. Fingers rest on ฟ ห ก ด and ◌า ส ว",
-    keys: "asdfjkl;'",
+    keys: "asdfghjkl;'",
     passWpm: 10,
     passAcc: 95,
     text: `ฟหกด ฟหกด สวสว สวสว
@@ -23,7 +23,7 @@ var TH_LESSONS = [
     id: "TH02",
     name: "Lesson  2   Home Row  Word Chains",
     focus: "Thai words run together without spaces. Keep the rhythm, do not look down",
-    keys: "asdfjkl;'",
+    keys: "asdfghjkl;'",
     passWpm: 13,
     passAcc: 95,
     text: `เดาเหา เกาเห้า กดหก สดสาว
@@ -59,7 +59,7 @@ var TH_LESSONS = [
     id: "TH05",
     name: "Lesson  5   Top Row Right  ◌ั ◌ี ร น ย บ ล",
     focus: "Keys y u i o p [ ]  ->  ◌ั ◌ี ร น ย บ ล. Right pinky takes p [ ]",
-    keys: "ypi[]",
+    keys: "yuiop[]",
     passWpm: 17,
     passAcc: 95,
     text: `กันดี รันสี กันดี รันสี
@@ -71,7 +71,7 @@ var TH_LESSONS = [
     id: "TH06",
     name: "Lesson  6   Top Row Shift  ฎ ฑ ธ ณ ญ ฐ",
     focus: "Shift on the top row. Shift+T gives ธ, Shift+P gives ญ, Shift+[ gives ฐ, Shift+Y gives ◌ํ, Shift+U gives ◌๊",
-    keys: "shift ertup[]",
+    keys: "shift e r t y u i p [",
     passWpm: 18,
     passAcc: 95,
     text: `ฎ ฑ ธ ณ ญ ฐ
@@ -107,7 +107,7 @@ var TH_LESSONS = [
   {
     id: "TH09",
     name: "Lesson  9   Number Row Letters  ๅ / - ภ ถ ค ต จ ข ช",
-    focus: "Number row letters: 1 2 3 4 5 6 7 8 9 0 - =  ->  ๅ / - ภ ถ ◌ุ ◌ึ ค ต จ ข ช. Shift+F gives โ",
+    focus: "Number row letters: 1 2 3 4 5 6 7 8 9 0 - =  ->  ๅ / - ภ ถ ◌ุ ◌ึ ค ต จ ข ช",
     keys: "1234567890-=",
     passWpm: 20,
     passAcc: 95,
@@ -121,7 +121,7 @@ var TH_LESSONS = [
     id: "TH10",
     name: "Lesson 10   Thai Digits  ๐ ๑ ๒ ๓ ๔ ๕ ๖ ๗ ๘ ๙",
     focus: "Shift + the number row gives Thai digits: ๐ on Shift+Q, ๑-๔ on Shift+2-5, ๕-๙ on Shift+8-=. The 6 and 7 keys are ◌ุ/◌ู and ◌ึ/฿",
-    keys: "shift q,2-5,8-=",
+    keys: "shift q 2 3 4 5 8 9 0 - =",
     passWpm: 18,
     passAcc: 95,
     text: `๐ ๑ ๒ ๓ ๔ ๕ ๖ ๗ ๘ ๙
@@ -134,7 +134,7 @@ var TH_LESSONS = [
     id: "TH11",
     name: "Lesson 11   Punctuation  And  Latin Digits",
     focus: "Shift gives . , ? ( ) \" on the Thai keyboard. Latin digits come from the numeric keypad",
-    keys: "shift+.,?()\"",
+    keys: "shift ' ] m z x w",
     passWpm: 21,
     passAcc: 95,
     text: `สวัสดีครับ คุณสบายดีไหม
@@ -197,6 +197,8 @@ TT.COURSES.th = {
   name: "ไทย (Kedmanee)",
   layout: "th",
   lang: "th",
+  /* body class app.js/applyOpts() switches on for script-specific typography */
+  css: "course-th",
   lessons: TH_LESSONS,
   tests: TH_TESTS
 };

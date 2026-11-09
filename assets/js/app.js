@@ -69,6 +69,13 @@
   }
   function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function saveOpts() { save(K_OPT, opts); }
+  /* the deferred drill write has to land before the tab goes away, or the last
+     400 ms of typing is lost */
+  function flushDrill() {
+    if (!drillTimer) return;
+    clearTimeout(drillTimer); drillTimer = null;
+    save(K_DRILL, drill);
+  }
 
   /* ------------------------------------------------------------------ audio */
   var AC = null;
@@ -254,8 +261,13 @@
   }
   /* the menu shortcuts are live on every screen (see the keydown handler), so the
      footer always shows them; the per-screen list only carries what is special to
-     that screen */
-  var MENU_KEYS = [["F2", "lessons"], ["F3", "tests"], ["F4", "progress"], ["F5", "options"], ["F1", "help"]];
+     that screen. Both the footer list and the keydown jump table come out of MENU
+     so the two cannot drift apart. */
+  var MENU_KEYS = MENU.map(function (m) { return [m.key, m.id]; });
+  function menuKey(k) {
+    for (var i = 0; i < MENU.length; i++) if (MENU[i].key === k) return MENU[i].id;
+    return null;
+  }
   function hk(x) {
     return '<span class="hk"><kbd>' + esc(x[0]) + "</kbd>" + esc(x[1]) + "</span>";
   }
@@ -303,16 +315,22 @@
   /* ---------------------------------------------------------------- screens */
   function stopTick() { if (S.tick) { clearInterval(S.tick); S.tick = null; } }
   function go(screen, arg, arg2) {
+    flushDrill();
     stopTick();
     S.session = null; S.kbdEl = null; S.kbdHost = null; S.caps = false;
     S.screen = screen;
-    if (screen === "boot") return boot();
-    if (screen === "lessons") return lessons();
-    if (screen === "tests") return tests();
-    if (screen === "progress") return progress();
-    if (screen === "options") return options();
-    if (screen === "help") return help();
-    if (screen === "session") return session(arg, arg2);
+    if (screen === "boot") boot();
+    else if (screen === "lessons") lessons();
+    else if (screen === "tests") tests();
+    else if (screen === "progress") progress();
+    else if (screen === "options") options();
+    else if (screen === "help") help();
+    else if (screen === "session") session(arg, arg2);
+    /* a screen swap is invisible to an AT: #view is the region that changed and it
+       is focusable (tabindex="-1"), so move the focus into it and the new content
+       is announced. The boot screen is entered directly, never through go(), so the
+       page does not steal focus on load. */
+    try { view.focus(); } catch (e) {}
   }
 
   function boot() {
@@ -371,17 +389,19 @@
         '<td class="num">' + (b ? b.wpm.toFixed(1) : "-.-") + "</td>" +
         '<td class="num">' + (b ? b.acc.toFixed(1) : "-.-") + "</td>" +
         '<td class="num">' + l.passWpm + "</td>" +
+        '<td class="num">' + l.passAcc + "</td>" +
         '<td class="num">' + (b ? b.tries : 0) + "</td>" +
         '<td><span class="chip ' + tone + '">' + state + "</span></td></tr>";
     }).join("");
     view.innerHTML =
       '<div class="page-head"><div><h1>Lessons</h1>' +
-      '<p class="dim">Select a lesson. A lesson unlocks the next one when you reach the required speed with ' +
-      "95% accuracy or better.</p></div>" +
+      '<p class="dim">Select a lesson. A lesson unlocks the next one when you reach its required speed at its ' +
+      "required accuracy or better - both targets are listed in the table.</p></div>" +
       '<div class="actions"><button class="btn ghost" id="retrylast">Repeat last attempt</button>' +
       '<button class="btn pri" id="go">Start selected lesson</button></div></div>' +
       '<div class="tablewrap"><table><thead><tr><th>Lesson</th><th class="num">Best&nbsp;WPM</th>' +
-      '<th class="num">Best&nbsp;ACC</th><th class="num">Req&nbsp;WPM</th><th class="num">Tries</th>' +
+      '<th class="num">Best&nbsp;ACC</th><th class="num">Req&nbsp;WPM</th><th class="num">Req&nbsp;ACC</th>' +
+      '<th class="num">Tries</th>' +
       "<th>Status</th></tr></thead><tbody>" + rows + "</tbody></table></div>";
     renderMenu();
     renderHotkeys([["Up/Down", "select"], ["Enter", "start"], ["Esc", "menu"]]);
@@ -497,7 +517,7 @@
 
     view.innerHTML = head +
       '<div class="passage" id="passage"></div>' + status +
-      '<div id="result"></div>' +
+      '<div id="result" aria-live="polite"></div>' +
       '<div class="kbd-wrap"><div id="kbd"></div>' +
       '<div class="legend" aria-hidden="true">' + Object.keys(TT.FINGERS).map(function (f) {
         return '<span><i style="background:var(--f-' + f + ')"></i>' + TT.FINGERS[f] + "</span>";
@@ -701,6 +721,11 @@
     CODE.Backquote = "`"; CODE.Minus = "-"; CODE.Equal = "="; CODE.BracketLeft = "[";
     CODE.BracketRight = "]"; CODE.Backslash = "\\"; CODE.Semicolon = ";"; CODE.Quote = "'";
     CODE.Comma = ","; CODE.Period = "."; CODE.Slash = "/";
+    /* the keypad punctuation has no key of its own drawn on screen, so point it at
+       the main-row key that carries the same character - a typist reaching for the
+       keypad "." must not see the Kedmanee Shift+' key light up instead */
+    CODE.NumpadEnter = "Enter"; CODE.NumpadDecimal = "."; CODE.NumpadAdd = "=";
+    CODE.NumpadSubtract = "-"; CODE.NumpadDivide = "/";
   })();
 
   function flashKey(ev) {
@@ -767,7 +792,7 @@
       cell("Lessons passed", passedCount() + "/" + TT.LESSONS.length) +
       cell("Best WPM", bestOverall()) +
       cell("Total runs", runs.length) +
-      cell("Sessions", new Set(runs.map(function (h) { return fmtDate(h.ts); })).size) +
+      cell("Days practised", new Set(runs.map(function (h) { return fmtDate(h.ts); })).size) +
       "</div>" +
       '<div class="cols"><div class="panel"><h3>Speed history (last ' + recent.length + " runs)</h3>" + chart + "</div>" +
       '<div class="panel"><h3>Notes</h3><p class="dim">Speed is measured in words per minute: five correct characters equal one word. '
@@ -887,7 +912,7 @@
       '<div class="cols"><div class="panel"><h3>How the course works</h3>' +
       "<p>Each lesson teaches one group of keys. Type the text exactly as shown. Characters brighten as you type them correctly; wrong characters are marked in red.</p>" +
       "<p>Wrong characters stay in the text until you press <kbd>Backspace</kbd> to erase them. A lesson is finished only when the text is complete and error free.</p>" +
-      "<p>A lesson is passed at the required speed with 95% or better accuracy; passing unlocks the next lesson.</p>" +
+      "<p>A lesson is passed at the required speed and accuracy - both are listed on the lesson menu; passing unlocks the next lesson.</p>" +
       "<p>In a timed test the clock decides the end of the run. Speed is measured in words per minute: five correct characters equal one word.</p>" +
       '</div><div class="panel"><h3>Technique</h3>' +
       "<ul class=\"keys\"><li>Home position: <kbd>A S D F</kbd> and <kbd>J K L ;</kbd></li>" +
@@ -910,16 +935,24 @@
       "<li><kbd>F4</kbd> progress report</li><li><kbd>F5</kbd> options</li>" +
       "<li><kbd>Esc</kbd> leave a lesson</li><li><kbd>F9</kbd> retry current lesson</li>" +
       "<li><kbd>F10</kbd> next lesson</li><li><kbd>F8</kbd> hide/show keyboard</li>" +
-      "<li><kbd>Backspace</kbd> erase a wrong character</li></ul>" +
+      "<li><kbd>Backspace</kbd> erase a wrong character</li>" +
+      "<li><kbd>&uarr;</kbd> <kbd>&darr;</kbd> move the selection in a list</li>" +
+      "<li><kbd>Enter</kbd> start the selected exercise</li></ul>" +
       '<p class="dim">The on-screen keyboard is clickable, so the course also works on tablets.</p></div>';
     renderMenu();
     renderHotkeys([["Esc", "menu"]]);
   }
 
+  /* the script-specific styling hangs off the course record, not off a hard-coded
+     id: a course that needs a body class declares it (see TT.COURSES.th.css), and
+     BODY_CSS is the list applyOpts() keeps straight. */
+  var BODY_CSS = ["course-th"];
   function applyOpts() {
     document.body.classList.toggle("crisp", !!opts.crisp);
     document.body.classList.toggle("no-kbd", !opts.kbd);
-    document.body.classList.toggle("course-th", TT.courseId === "th");
+    var want = (TT.active() || {}).css || "";
+    for (var i = 0; i < BODY_CSS.length; i++)
+      document.body.classList.toggle(BODY_CSS[i], BODY_CSS[i] === want);
   }
   function setCourse(id) {
     opts.course = id;
@@ -939,9 +972,12 @@
        just written a custom drill has no way off the Options screen without first
        clicking somewhere else. */
     var field = tag === "TEXTAREA" || (tag === "INPUT" && TEXT_INPUT.test((el.type || "text")));
-    if (field && !/^(Escape|F[1-5])$/.test(e.key)) return;
+    if (field && e.key !== "Escape" && !menuKey(e.key)) return;
     /* while an IME is composing, the keys belong to the IME - do not steal them */
     if (e.isComposing || e.keyCode === 229) return;
+    /* the menu keys are live on every screen, so the jump table is resolved once
+       here and used by both the session and the menu branches below */
+    var jump = menuKey(e.key);
 
     if (S.session && !S.session.state.done) {
       /* Caps Lock silently turns every lowercase lesson into a wall of errors, and
@@ -952,12 +988,7 @@
       if (e.key === "F9") { e.preventDefault(); go("session", S.session.state.item, S.limit || undefined); return; }
       if (e.key === "F10") { e.preventDefault(); nextLesson(); return; }
       if (e.key === "F8") { e.preventDefault(); opts.kbd = !opts.kbd; saveOpts(); applyOpts(); return; }
-      if (e.key === "F1" || e.key === "F2" || e.key === "F3" || e.key === "F4" || e.key === "F5") {
-        e.preventDefault();
-        var map = { F1: "help", F2: "lessons", F3: "tests", F4: "progress", F5: "options" };
-        go(map[e.key]);
-        return;
-      }
+      if (jump) { e.preventDefault(); go(jump); return; }
       if (S.session.handleKey(e)) { e.preventDefault(); return; }
       /* swallow bare printable keys so they never reach the page, but leave the
          browser shortcuts (copy, paste, select all, undo) alone */
@@ -972,15 +1003,16 @@
       if (e.key === "F8") { e.preventDefault(); opts.kbd = !opts.kbd; saveOpts(); applyOpts(); return; }
     }
     if (e.key === "Escape") { e.preventDefault(); go("lessons"); return; }
-    if (e.key === "F1") { e.preventDefault(); go("help"); return; }
-    if (e.key === "F2") { e.preventDefault(); go("lessons"); return; }
-    if (e.key === "F3") { e.preventDefault(); go("tests"); return; }
-    if (e.key === "F4") { e.preventDefault(); go("progress"); return; }
-    if (e.key === "F5") { e.preventDefault(); go("options"); return; }
+    if (jump) { e.preventDefault(); go(jump); return; }
     /* handled before the boot catch-all, which swallows every other key */
     if (S.screen === "boot") {
-      e.preventDefault();
-      startFromBoot();
+      /* "press any key" means a typing key. Bare modifiers and Ctrl/Cmd combos have
+         to pass through, or Ctrl+T opens no tab and Shift alone starts a lesson. */
+      if (!e.ctrlKey && !e.metaKey && !e.altKey &&
+          (e.key === "Enter" || (typeof e.key === "string" && e.key.length === 1))) {
+        e.preventDefault();
+        startFromBoot();
+      }
       return;
     }
     var pick = S.screen === "tests" ? "tests" : "lessons";
@@ -1024,6 +1056,9 @@
   }
 
   window.addEventListener("resize", function () { if (S.kbdEl && S.session && !S.session.state.done) updKbd(); });
+  /* the drill draft is saved on a timer, so close the tab inside that window and
+     pagehide is the last chance to write it */
+  window.addEventListener("pagehide", flushDrill);
 
   load();
   TT.setCourse(opts.course);

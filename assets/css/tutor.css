@@ -30,6 +30,14 @@
   --p-done:#e8eef7;
   --p-cur:rgba(91,140,255,.22);
 
+  /* translucent fills over the surface: every rule that tints a background takes
+     one of these, so a theme only restates tokens and never inherits a tint from
+     the other palette */
+  --ok-bg:rgba(53,211,154,.14);
+  --acc-bg:rgba(91,140,255,.16);
+  --hl-bg:rgba(91,140,255,.14);
+  --bad-bg:rgba(255,107,122,.14);
+
   /* finger map: cool hues for the left hand, warm for the right */
   --f-lp:#38bdf8; --f-lp-bg:rgba(56,189,248,.14);
   --f-lr:#34d399; --f-lr-bg:rgba(52,211,153,.14);
@@ -84,6 +92,11 @@ html[data-theme="light"]{
   --p-pending:#a3b0c0;
   --p-done:#111826;
   --p-cur:rgba(47,107,255,.16);
+
+  --ok-bg:rgba(15,157,99,.12);
+  --acc-bg:rgba(47,107,255,.14);
+  --hl-bg:rgba(47,107,255,.12);
+  --bad-bg:rgba(217,45,63,.12);
 
   --f-lp:#0284c7; --f-lp-bg:rgba(2,132,199,.10);
   --f-lr:#059669; --f-lr-bg:rgba(5,150,105,.10);
@@ -225,8 +238,8 @@ hr{border:0; border-top:1px solid var(--border); margin:18px 0}
   text-transform:uppercase; padding:3px 9px; border-radius:var(--r-pill);
   background:var(--surface-3); color:var(--muted); border:1px solid var(--border);
 }
-.chip.ok{background:rgba(53,211,154,.14); color:var(--ok); border-color:transparent}
-.chip.acc{background:rgba(91,140,255,.16); color:var(--accent); border-color:transparent}
+.chip.ok{background:var(--ok-bg); color:var(--ok); border-color:transparent}
+.chip.acc{background:var(--acc-bg); color:var(--accent); border-color:transparent}
 
 /* ---------------------------------------------------------------- cards */
 .panel{
@@ -276,7 +289,7 @@ tbody tr:hover{background:var(--surface-2)}
 tbody tr:last-child td{border-bottom:0}
 tr.locked td{color:var(--faint); cursor:default}
 tr.locked:hover{background:transparent}
-tr.current td{background:rgba(91,140,255,.14); color:var(--text)}
+tr.current td{background:var(--hl-bg); color:var(--text)}
 tr.current td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 td.num,th.num{text-align:right; font-variant-numeric:tabular-nums; font-family:var(--mono)}
 
@@ -301,7 +314,7 @@ button.btn.lg{padding:12px 26px; font-size:15px; border-radius:var(--r)}
 button.btn.ghost{background:transparent; color:var(--muted); border-color:var(--border)}
 button.btn.ghost:hover{color:var(--text); background:var(--surface-2)}
 button.btn.danger{color:var(--bad); border-color:var(--border)}
-button.btn.danger:hover{background:rgba(255,107,122,.12); border-color:var(--bad)}
+button.btn.danger:hover{background:var(--bad-bg); border-color:var(--bad)}
 button.btn:disabled{background:var(--surface-2); color:var(--faint); border-color:var(--border); cursor:not-allowed}
 
 label.opt{
@@ -328,6 +341,9 @@ label.opt em{font-style:normal; color:var(--muted)}
 }
 .segopt:hover span{color:var(--text)}
 .segopt input:checked + span{background:var(--accent); color:var(--accent-ink); font-weight:600}
+/* the input is an invisible overlay, so the focus ring has to be drawn on the
+   visible segment it sits on top of - opacity:0 hides the element's own box-shadow */
+.segopt input:focus-visible + span{box-shadow:var(--ring)}
 
 input[type=text], textarea{
   font:inherit; background:var(--surface-2); color:var(--text);
@@ -390,7 +406,7 @@ textarea{min-height:130px; resize:vertical; line-height:1.6}
 }
 .passage span{color:var(--p-pending); position:relative}
 .passage span.done{color:var(--p-done)}
-.passage span.err{color:var(--bad); background:rgba(255,107,122,.14); border-radius:4px; text-decoration:underline wavy var(--bad); text-underline-offset:.28em}
+.passage span.err{color:var(--bad); background:var(--bad-bg); border-radius:4px; text-decoration:underline wavy var(--bad); text-underline-offset:.28em}
 .passage span.cur{background:var(--p-cur); border-radius:4px}
 /* the caret bar sits on the left edge of the character to type next. A Thai
    cluster is one box, so when its base is typed and a mark is not, the next key
