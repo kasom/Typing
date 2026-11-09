@@ -25,6 +25,10 @@ TT.createSession = function (item, container, opts) {
   var chars = Array.from(item.text);
   var nodes = [];
   var groups = [];
+  /* the running totals behind badLeft() and stats(): paint(), the onKey hook and
+     the status interval all ask for them on every keystroke, and rescanning the
+     whole passage each time is what turns a long custom drill into a stutter */
+  var bad = 0, correct = 0;
 
   var st = {
     item: item,
@@ -160,6 +164,11 @@ var SPACE = /\s/;
     return wrong ? "err" : (all ? "done" : "");
   }
 
+  /* paint() runs on every keystroke, so a group is only touched when its state
+     actually changed. Rewriting the className of every character in the passage
+     is what made the caret stutter once a drill ran to a few thousand characters;
+     grp.cls/grp.at cache what is on the element right now, and build() leaves
+     them undefined so the first pass still paints everything. */
   function paint() {
     for (var g = 0; g < groups.length; g++) {
       var grp = groups[g], cls = groupClass(grp);
@@ -169,6 +178,8 @@ var SPACE = /\s/;
       var at = "";
       if (!st.done && st.pos >= grp.from && st.pos < grp.to)
         at = st.pos === grp.from ? " cur" : " cur right";
+      if (grp.cls === cls && grp.at === at) continue;
+      grp.cls = cls; grp.at = at;
       for (var e = 0; e < grp.els.length; e++) {
         var el = grp.els[e];
         /* a carrier keeps the base classes it was built with - the dotted circle and
@@ -177,7 +188,7 @@ var SPACE = /\s/;
           (el === grp.caret ? at : "");
       }
     }
-    container.classList.toggle("danger", strict && badLeft() > 0);
+    container.classList.toggle("danger", strict && bad > 0);
     scrollToCur();
   }
 
@@ -193,10 +204,19 @@ var SPACE = /\s/;
     try { cur.scrollIntoView({ block: "nearest", inline: "nearest" }); } catch (e) { cur.scrollIntoView(false); }
   }
 
+  /* the single place the typed state is written, so the counters cannot drift away
+     from the array: backspace clears a cell, retyping replaces a wrong one */
+  function setTyped(i, v) {
+    var prev = st.typed[i];
+    if (prev === false && v !== false) bad--;
+    else if (prev !== false && v === false) bad++;
+    if (prev === true && v !== true) correct--;
+    else if (prev !== true && v === true) correct++;
+    st.typed[i] = v;
+  }
+
   function badLeft() {
-    var n = 0;
-    for (var i = 0; i < st.typed.length; i++) if (st.typed[i] === false) n++;
-    return n;
+    return bad;
   }
 
   function stats() {
@@ -204,8 +224,6 @@ var SPACE = /\s/;
     var ms = st.startedAt ? now - st.startedAt : 0;
     var min = ms / 60000;
     var live = min > 0;
-    var correct = 0;
-    for (var i = 0; i < st.typed.length; i++) if (st.typed[i] === true) correct++;
     return {
       wpm: live ? Math.round(correct / 5 / min * 10) / 10 : 0,
       cpm: live ? Math.round(correct / min) : 0,
@@ -214,7 +232,7 @@ var SPACE = /\s/;
       errors: st.errors,
       keystrokes: st.keystrokes,
       correct: correct,
-      badLeft: badLeft(),
+      badLeft: bad,
       seconds: Math.round(ms / 1000),
       pct: chars.length ? Math.round(st.pos / chars.length * 100) : 0,
       done: st.done
@@ -251,7 +269,7 @@ var SPACE = /\s/;
       ok = TT.altChars(expected).indexOf(ch) >= 0;
       viaAlt = ok;
     }
-    st.typed[st.pos] = ok;
+    setTyped(st.pos, ok);
     st.pos++;
     st.keystrokes++;
     if (!ok) st.errors++;
@@ -264,7 +282,7 @@ var SPACE = /\s/;
     /* a finished run is a scored record: editing it afterwards would redraw the
        cursor into a passage the typist can no longer change */
     if (st.done || st.pos === 0) return false;
-    st.typed[st.pos - 1] = null;
+    setTyped(st.pos - 1, null);
     st.pos--;
     paint();
     if (hooks.onKey) hooks.onKey({ ch: null, code: code || "Backspace", expected: chars[st.pos], ok: true, back: true, stats: stats() });

@@ -17,6 +17,12 @@
   var opts = Object.assign({}, DEF_OPTS);
   var history = [];
   var best = {};
+  /* one drill per course. Its records are keyed CUSTOM.<course> (see drillId), so
+     the text that produced them has to be kept per course too, or the Progress row
+     for one course points at text the editor no longer holds. `drills` is what
+     K_DRILL stores; `drill` is the active course's entry, the only one any screen
+     ever renders. */
+  var drills = {};
   var drill = "";
   /* the drill textarea saves on a timer: a synchronous localStorage write on
      every keystroke stalls the caret on long pastes */
@@ -63,18 +69,29 @@
       /* save() always encodes, so the drill has to come back through JSON.parse -
          read raw it returns with the quote marks and the escaped newlines in it */
       var d = JSON.parse(localStorage.getItem(K_DRILL) || "null");
-      if (typeof d === "string") drill = d;
+      if (typeof d === "string") {
+        /* stored before drills were scoped per course: keep it under the course the
+           typist is on, which is where they will look for it */
+        drills[opts.course] = d;
+      } else if (d && typeof d === "object" && !Array.isArray(d)) {
+        for (var dk in d) {
+          if (d.hasOwnProperty(dk) && typeof d[dk] === "string") drills[dk] = d[dk];
+        }
+      }
+      drill = drills[opts.course] || "";
     } catch (e) { /* storage unavailable */ }
     S.dur = opts.testdur;
   }
   function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function saveOpts() { save(K_OPT, opts); }
+  function setDrill(txt) { drill = txt; drills[TT.courseId] = txt; }
+  function saveDrill() { save(K_DRILL, drills); }
   /* the deferred drill write has to land before the tab goes away, or the last
      400 ms of typing is lost */
   function flushDrill() {
     if (!drillTimer) return;
     clearTimeout(drillTimer); drillTimer = null;
-    save(K_DRILL, drill);
+    saveDrill();
   }
 
   /* ------------------------------------------------------------------ audio */
@@ -425,10 +442,13 @@
       if (!hit) {
         /* the last run was a custom drill: replay the stored text, switching to
            the course the drill belongs to so the layout matches what is typed */
-        if (isDrillId(last.id) && drill) {
+        if (isDrillId(last.id)) {
           var cid = last.id.slice(7);
-          if (TT.COURSES[cid] && cid !== TT.courseId) setCourse(cid);
-          go("session", drillItem());
+          var txt = drills[cid];
+          if (TT.COURSES[cid] && txt) {
+            if (cid !== TT.courseId) setCourse(cid);
+            go("session", drillItem());
+          } else sndErr();
         } else sndErr();
         return;
       }
@@ -876,9 +896,9 @@
          straight away, and the textarea is rebuilt from the in-memory drill, so
          only the persistence is deferred, not the value */
       cu.oninput = function () {
-        drill = cu.value;
+        setDrill(cu.value);
         clearTimeout(drillTimer);
-        drillTimer = setTimeout(function () { save(K_DRILL, drill); }, 400);
+        drillTimer = setTimeout(saveDrill, 400);
       };
     }
     /* the defaults have to reach the live state too, not just the stored copy:
@@ -899,9 +919,9 @@
     view.querySelector("#godrill").onclick = function () {
       var txt = view.querySelector("#custom").value.trim();
       if (!txt) { sndErr(); return; }
-      drill = txt;
-      clearTimeout(drillTimer);
-      save(K_DRILL, drill);
+      setDrill(txt);
+      clearTimeout(drillTimer); drillTimer = null;
+      saveDrill();
       go("session", drillItem());
     };
   }
@@ -958,6 +978,8 @@
     opts.course = id;
     saveOpts();
     TT.setCourse(id);
+    /* the drill editor follows the course, as its records already do */
+    drill = drills[id] || "";
     S.sel = { lessons: 0, tests: 0 };
     applyOpts();
   }
@@ -1019,6 +1041,10 @@
     /* a focused control in the menu bar owns its own keys: Enter on the course
        pill has to switch course, not start the highlighted lesson */
     var inbar = !!(el.closest && el.closest(".menubar"));
+    /* a focused radio or checkbox owns its arrow keys as well: the test duration
+       is a radiogroup, and taking Up/Down from it moves the list selection,
+       re-renders the screen and drops the control the typist just tabbed to */
+    var inctl = inbar || tag === "INPUT" || tag === "SELECT";
     if (e.key === "Enter" && !inbar && (S.screen === "lessons" || S.screen === "tests")) {
       e.preventDefault();
       if (S.screen === "lessons") {
@@ -1029,7 +1055,7 @@
       }
       return;
     }
-    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !inbar && (S.screen === "lessons" || S.screen === "tests")) {
+    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !inctl && (S.screen === "lessons" || S.screen === "tests")) {
       e.preventDefault();
       var isTest = S.screen === "tests";
       var list = isTest ? TT.TESTS : TT.LESSONS;
