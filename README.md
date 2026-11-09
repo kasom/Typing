@@ -21,7 +21,9 @@ locally in your browser via `localStorage`; nothing is sent anywhere.
   press, lights up the physical key you actually hit, and is clickable so the
   course also works on tablets.
 - **Live scoring** — WPM, net CPM, raw speed, accuracy, error count, elapsed /
-  remaining time and percent complete, updated as you type.
+  remaining time and percent complete, updated as you type. Time spent with the
+  browser tab hidden is handed back to the run, so switching away mid-test does
+  not cost you the clock.
 - **Thai-aware rendering** — dependent marks are shaped into clusters with a
   dotted-circle carrier so above/below/before vowels stay readable, and Thai
   digits map to the correct Kedmanee keys.
@@ -29,7 +31,8 @@ locally in your browser via `localStorage`; nothing is sent anywhere.
   position (e.g. `asdf` types `ฟหกด`), so no OS keyboard switch is required.
 - **Strict mode** — wrong characters stay in the text and must be erased with
   Backspace before a lesson can be completed.
-- **Custom drills** — paste any text and practise it (unscored).
+- **Custom drills** — paste any text and practise it (unscored). Each course keeps
+  its own drill text, matching the way records are kept per course.
 - **Dark / light theme** — follows your OS preference by default and can be
   overridden; applied before first paint to avoid a flash.
 - **Sound feedback** — subtle key-click, error and completion tones synthesised

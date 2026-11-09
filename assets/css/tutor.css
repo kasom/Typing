@@ -241,6 +241,15 @@ hr{border:0; border-top:1px solid var(--border); margin:18px 0}
 .chip.ok{background:var(--ok-bg); color:var(--ok); border-color:transparent}
 .chip.acc{background:var(--acc-bg); color:var(--accent); border-color:transparent}
 
+/* the accessible copy of an exercise. The coloured passage is one element per
+   cluster - correct for a typist, unreadable as text - so assistive tech reads
+   the exercise from a plain copy in here instead, and the passage itself is
+   aria-hidden. Clipped rather than display:none, which would remove it too. */
+.sr{
+  position:absolute; width:1px; height:1px; margin:-1px; padding:0; border:0;
+  overflow:hidden; clip-path:inset(50%);
+}
+
 /* ---------------------------------------------------------------- cards */
 .panel{
   background:linear-gradient(180deg, var(--surface), color-mix(in srgb, var(--surface) 88%, var(--bg)));

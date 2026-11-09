@@ -535,8 +535,12 @@
       '<span class="hint" id="s-hint"></span>' +
       "</div>";
 
+    /* the passage is one element per cluster, which reaches an AT as fragments, so
+       the exercise is announced from a plain copy of the text instead. It comes
+       first, because #view takes focus when the screen opens. */
     view.innerHTML = head +
-      '<div class="passage" id="passage"></div>' + status +
+      '<p class="sr" lang="' + TT.active().lang + '">' + esc(item.text) + "</p>" +
+      '<div class="passage" id="passage" aria-hidden="true"></div>' + status +
       '<div id="result" aria-live="polite"></div>' +
       '<div class="kbd-wrap"><div id="kbd"></div>' +
       '<div class="legend" aria-hidden="true">' + Object.keys(TT.FINGERS).map(function (f) {
@@ -601,6 +605,10 @@
       var left = S.limit - elapsed();
       q("s-time").textContent = clockUp(left);
       if (left <= 0 && !S.session.state.done) {
+        /* a hidden tab both throttles this interval and hides the countdown from
+           the typist, so the deadline is not enforced until the tab is back -
+           visibilitychange hands the lost time back first (see below) */
+        if (document.hidden) return;
         /* pin the end to the deadline, not to the tick that happened to notice it */
         S.session.finish(S.session.state.startedAt + S.limit * 1000);
         return;
@@ -1082,6 +1090,23 @@
   }
 
   window.addEventListener("resize", function () { if (S.kbdEl && S.session && !S.session.state.done) updKbd(); });
+  /* Time spent with the tab hidden is not time at the keyboard: the typist cannot
+     see the countdown, and the browser throttles the interval that ends a timed
+     run. Moving the start time by the hidden stretch gives the run its whole time
+     back, and because finish() pins the scored duration to startedAt + limit the
+     record stays exact. A merely unfocused-but-visible window is left alone on
+     purpose, or clicking away for a moment would make part of a test free. */
+  var pausedSt = null, pausedAt = 0;
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+      var st = S.session && S.session.state;
+      pausedSt = st && !st.done && st.startedAt ? st : null;
+      pausedAt = pausedSt ? Date.now() : 0;
+    } else if (pausedSt) {
+      pausedSt.startedAt += Date.now() - pausedAt;
+      pausedSt = null; pausedAt = 0;
+    }
+  });
   /* the drill draft is saved on a timer, so close the tab inside that window and
      pagehide is the last chance to write it */
   window.addEventListener("pagehide", flushDrill);
