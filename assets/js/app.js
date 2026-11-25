@@ -9,7 +9,7 @@
   var K_OPT = "tt.options.v1", K_HIST = "tt.history.v1", K_BEST = "tt.best.v1", K_DRILL = "tt.drill.v1";
   var DEF_DUR = 2;
 
-  var DEF_OPTS = { sound: true, crisp: true, kbd: true, hints: true, strict: true, course: "en", altkeys: true, testdur: DEF_DUR };
+  var DEF_OPTS = { sound: true, crisp: true, kbd: true, pad: false, hints: true, strict: true, course: "en", altkeys: true, testdur: DEF_DUR };
   var DUR_OPTS = [1, 2, 3, 5];
   /* below this a run is noise: a couple of lucky keystrokes would otherwise post
      a 100% best that no real session could ever beat */
@@ -28,7 +28,7 @@
      every keystroke stalls the caret on long pastes */
   var drillTimer = null;
 
-  var S = { screen: "boot", sel: { lessons: 0, tests: 0 }, dur: DEF_DUR, session: null, tick: null, limit: 0, caps: false, kbdEl: null, kbdHost: null };
+  var S = { screen: "boot", sel: { lessons: 0, tests: 0 }, dur: DEF_DUR, session: null, tick: null, limit: 0, caps: false, kbdEl: null, kbdHost: null, pad: null };
 
   /* ---------------------------------------------------------------- storage */
   function num(v) { return typeof v === "number" && isFinite(v) ? v : 0; }
@@ -334,7 +334,7 @@
   function go(screen, arg, arg2) {
     flushDrill();
     stopTick();
-    S.session = null; S.kbdEl = null; S.kbdHost = null; S.caps = false;
+    S.session = null; S.kbdEl = null; S.kbdHost = null; S.pad = null; S.caps = false;
     S.screen = screen;
     if (screen === "boot") boot();
     else if (screen === "lessons") lessons();
@@ -542,13 +542,13 @@
       '<p class="sr" lang="' + TT.active().lang + '">' + esc(item.text) + "</p>" +
       '<div class="passage" id="passage" aria-hidden="true"></div>' + status +
       '<div id="result" aria-live="polite"></div>' +
-      '<div class="kbd-wrap"><div id="kbd"></div>' +
+      '<div class="kbd-wrap"><div id="kbd"></div><div id="pad"></div>' +
       '<div class="legend" aria-hidden="true">' + Object.keys(TT.FINGERS).map(function (f) {
         return '<span><i style="background:var(--f-' + f + ')"></i>' + TT.FINGERS[f] + "</span>";
       }).join("") + "</div></div>";
 
     renderMenu();
-    renderHotkeys([["Esc", "abort"], ["F9", "retry"], ["F10", "next"], ["F8", "keyboard"], ["Type", "just start typing"]]);
+    renderHotkeys([["Esc", "abort"], ["F9", "retry"], ["F10", "next"], ["F8", "keyboard"], ["F7", "gamepad"], ["Type", "just start typing"]]);
 
     var passage = view.querySelector("#passage");
     passage.setAttribute("lang", TT.active().lang);
@@ -581,6 +581,7 @@
       /* the same test the Options screen uses (see dead()): what matters is whether
          the active layout can reach the US key positions, not which course id is set */
       (TT.layout !== TT.LAYOUTS.us && opts.altkeys ? " You may type the Thai characters or the US key in the same position." : "") +
+      (opts.pad && S.pad ? " Controller view: hold the lit LB/RB/LT/RT combo, then tap the lit face key; L3 is Shift, D-pad erases and spaces." : "") +
       "</div>";
   }
 
@@ -629,7 +630,11 @@
     } else if (opts.hints) {
       var n = S.session.next();
       var want = S.session.charAt(S.session.state.pos);
-      if (n) {
+      /* in controller view the hint names gamepad buttons, not fingers */
+      var padHint = (opts.pad && S.pad) ? S.pad.hint(want) : null;
+      if (padHint) {
+        q("s-hint").textContent = "NEXT: " + padHint;
+      } else if (n) {
         var alt = opts.altkeys ? TT.altChars(want) : [];
         q("s-hint").textContent = "NEXT: " + (n.shift ? "Shift + " : "") + pretty(want) +
           (alt.length ? "  or  " + pretty(alt[0]) : "") +
@@ -686,6 +691,7 @@
     if (q("menu")) q("menu").onclick = function () { go("lessons"); };
     if (q("next")) q("next").onclick = function () { S.sel.lessons = lIdx + 1; go("session", TT.LESSONS[lIdx + 1]); };
     if (q("s-hint")) q("s-hint").textContent = "";
+    if (S.pad) S.pad.clear();
     if (S.kbdEl) S.kbdEl.querySelectorAll(".next").forEach(function (k) { k.classList.remove("next"); });
   }
   function cell(k, v) { return '<div class="cell"><b>' + k + "</b> " + v + "</div>"; }
@@ -712,6 +718,26 @@
         S.session.inject(ch);
       };
     });
+    buildPad();
+  }
+
+  /* the gamepad diagram lives next to the keyboard; CSS shows one or the
+     other, so F7 can switch views without disturbing a running session */
+  function buildPad() {
+    var host = view.querySelector("#pad");
+    if (!host) return;
+    S.pad = TT.buildPad(host, opts.course, {
+      type: function (ch) {
+        if (S.session && !S.session.state.done) S.session.inject(ch);
+      },
+      backspace: function () {
+        if (S.session && !S.session.state.done) S.session.backspace();
+      },
+      want: function () {
+        return S.session && !S.session.state.done
+          ? S.session.charAt(S.session.state.pos) : null;
+      }
+    });
   }
 
   function keyEl(id) {
@@ -720,6 +746,12 @@
   }
 
   function updKbd() {
+    /* keep both views current: whichever one CSS is hiding becomes correct
+       the moment F7 swaps them, with no rebuild mid-session */
+    if (S.pad && S.session) {
+      var st = S.session.state;
+      S.pad.setNext(!st.done && st.pos < st.total ? S.session.charAt(st.pos) : null);
+    }
     if (!S.kbdEl) return;
     S.kbdEl.querySelectorAll(".next").forEach(function (k) { k.classList.remove("next"); });
     var n = S.session.next();
@@ -757,7 +789,6 @@
   })();
 
   function flashKey(ev) {
-    if (!S.kbdEl) return;
     var id = CODE[ev.code] || null;
     if (!id) {
       if (ev.ch === null) id = "Back";
@@ -765,6 +796,11 @@
       else if (ev.ch === " ") id = "Space";
       else if (ev.ch) { var n = TT.keyForChar(ev.ch); id = n && n.key; }
     }
+    /* the same physical-key id lights the gamepad slot that injected it:
+       every pad binding has a unique key, so Backspace lands on D-pad ← and
+       Shift lands on L3 without any guessing */
+    if (S.pad && id) S.pad.flash(id, ev.ok);
+    if (!S.kbdEl) return;
     /* the keypad is only drawn for layouts that cannot reach Latin digits, so on
        the US layout a keypad press has to fall back to the main-row key */
     var k = keyEl(id);
@@ -847,13 +883,27 @@
       ["sound", "Key click and error sounds"],
       ["crisp", "Crisp text (turn off font smoothing)"],
       ["kbd", "Show the on-screen keyboard with finger colours"],
+      ["pad", "Controller view - replace the keyboard with a gamepad button map"],
       ["hints", "Show the next-key finger hint on the status line"],
       ["strict", "Errors must be erased before a lesson can be finished"],
       ["altkeys", "Accept the same key position on the US layout (asdf for ฟหกด)"]
     ];
     /* altkeys only ever does anything on a non-US layout: TT.altChars() is a no-op
        for the QWERTY course, so say so instead of offering a dead switch */
-    function dead(o) { return o === "altkeys" && TT.layout === TT.LAYOUTS.us; }
+    function dead(o) {
+      if (o === "altkeys") return TT.layout === TT.LAYOUTS.us;
+      if (o === "pad") return !(TT.padFor && TT.padFor(opts.course));
+      return false;
+    }
+    /* name the profile the controller view will drive, so the link to the
+       PadMapper (JK) typing profile is visible where it is switched on */
+    var padMap = TT.padFor && TT.padFor(opts.course);
+    var padNote = padMap
+      ? '<p class="dim">Controller view mirrors the <b>' + esc(padMap.name) + '</b> typing profile from the ' +
+        'JK / PadMapper app (map built from ' + esc(padMap.source) + ' by ' +
+        '<code>tools/sync_padmap.py</code>). Type with the gamepad: hold the LB/RB/LT/RT combo, ' +
+        'tap A B X Y Start Guide, L3 is Shift, the D-pad is Backspace/Esc/Space/Enter. Toggle with <kbd>F7</kbd>.</p>'
+      : "";
     var theme = document.documentElement.dataset.theme || "dark";
     view.innerHTML =
       '<div class="page-head"><div><h1>Options</h1>' +
@@ -873,8 +923,8 @@
         var off = dead(o[0]);
         return '<label class="opt' + (off ? " off" : "") + '"><input type="checkbox" data-o="' + o[0] + '"' +
           (opts[o[0]] ? " checked" : "") + (off ? " disabled" : "") + '><span>' + o[1] +
-          (off ? ' <em>(not used by this course)</em>' : "") + "</span></label>";
-      }).join("") +
+          (off ? ' <em>' + (o[0] === "pad" ? "(no gamepad map for this course)" : "(not used by this course)") + "</em>" : "") + "</span></label>";
+      }).join("") + padNote +
       '<h3 style="margin-top:16px">Colour theme</h3><div class="seg" role="radiogroup" aria-label="Colour theme">' +
       ["dark", "light"].map(function (v) {
         return '<label class="segopt"><input type="radio" name="theme" value="' + v + '"' +
@@ -958,11 +1008,17 @@
       "<p>Thai digits ๐-๙ are Shift with the number row: ๐ on Shift+Q, ๑-๔ on Shift+2-5 and ๕-๙ on Shift+8-=. The 6 and 7 keys are ◌ุ/◌ู and ◌ึ/฿ instead. The marks ◌็ and ◌์ are Shift+H and Shift+N. Latin digits come from the numeric keypad.</p>" +
       "<p>You do not have to switch the operating system keyboard: pressing the US key at the same position is accepted too, so <kbd>a</kbd> <kbd>s</kbd> <kbd>d</kbd> <kbd>f</kbd> types <span class=\"hi\">ฟหกด</span>. Turn this off in Options if you want strict Thai input.</p>" +
       '<p class="dim">The interface, the menus and this help stay in English.</p></div>' +
+      '<div class="panel"><h3>Gamepad typing (controller view)</h3>' +
+      "<p>Switch on <b>Controller view</b> in Options (or press <kbd>F7</kbd>) and the on-screen keyboard is replaced by a gamepad diagram: it shows the six tap keys <b>A B X Y Start Guide</b> with the characters of the row the next character lives in, marks the <b>LB RB LT RT</b> buttons to hold, and lights the slot a typed key came from.</p>" +
+      "<p>The page still only sees ordinary keystrokes - you need the <b>JK / PadMapper</b> app running with the <b>Typing</b> (English) or <b>Typing_TH</b> (Thai) profile active, which turns a standard-layout gamepad into a keyboard. Hold the finger combo, tap the face key with the right thumb, and <kbd>L3</kbd> (left stick click) is Shift. The D-pad is Backspace / Esc / Space / Enter. Details in the app's TYPING.md.</p>" +
+      "<p>The diagram is generated from those two profile files by <code>tools/sync_padmap.py</code>; when the profiles change, re-run the script to update the view. Until you reach the keys a lesson needs, accuracy will look impossible: that is the pad's grid, not your fault - the layers are shown so the combos become muscle memory.</p>" +
+      "</div>" +
       '<div class="panel"><h3>Keys</h3><ul class="keys">' +
       "<li><kbd>F1</kbd> help</li><li><kbd>F2</kbd> lesson menu</li><li><kbd>F3</kbd> timed tests</li>" +
       "<li><kbd>F4</kbd> progress report</li><li><kbd>F5</kbd> options</li>" +
       "<li><kbd>Esc</kbd> leave a lesson</li><li><kbd>F9</kbd> retry current lesson</li>" +
       "<li><kbd>F10</kbd> next lesson</li><li><kbd>F8</kbd> hide/show keyboard</li>" +
+      "<li><kbd>F7</kbd> keyboard / gamepad view</li>" +
       "<li><kbd>Backspace</kbd> erase a wrong character</li>" +
       "<li><kbd>&uarr;</kbd> <kbd>&darr;</kbd> move the selection in a list</li>" +
       "<li><kbd>Enter</kbd> start the selected exercise</li></ul>" +
@@ -978,6 +1034,9 @@
   function applyOpts() {
     document.body.classList.toggle("crisp", !!opts.crisp);
     document.body.classList.toggle("no-kbd", !opts.kbd);
+    /* controller view only wins where a map exists; the keyboard stays as the
+       fallback for courses with no gamepad profile */
+    document.body.classList.toggle("pad-on", !!(opts.pad && TT.padFor && TT.padFor(opts.course)));
     var want = (TT.active() || {}).css || "";
     for (var i = 0; i < BODY_CSS.length; i++)
       document.body.classList.toggle(BODY_CSS[i], BODY_CSS[i] === want);
@@ -1018,6 +1077,7 @@
       if (e.key === "F9") { e.preventDefault(); go("session", S.session.state.item, S.limit || undefined); return; }
       if (e.key === "F10") { e.preventDefault(); nextLesson(); return; }
       if (e.key === "F8") { e.preventDefault(); opts.kbd = !opts.kbd; saveOpts(); applyOpts(); return; }
+      if (e.key === "F7") { e.preventDefault(); opts.pad = !opts.pad; saveOpts(); applyOpts(); updKbd(); return; }
       if (jump) { e.preventDefault(); go(jump); return; }
       if (S.session.handleKey(e)) { e.preventDefault(); return; }
       /* swallow bare printable keys so they never reach the page, but leave the
@@ -1031,6 +1091,7 @@
       if (e.key === "F9") { e.preventDefault(); go("session", S.session.state.item, S.limit || undefined); return; }
       if (e.key === "F10") { e.preventDefault(); nextLesson(); return; }
       if (e.key === "F8") { e.preventDefault(); opts.kbd = !opts.kbd; saveOpts(); applyOpts(); return; }
+      if (e.key === "F7") { e.preventDefault(); opts.pad = !opts.pad; saveOpts(); applyOpts(); return; }
     }
     if (e.key === "Escape") { e.preventDefault(); go("lessons"); return; }
     if (jump) { e.preventDefault(); go(jump); return; }

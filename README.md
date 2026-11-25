@@ -20,6 +20,10 @@ locally in your browser via `localStorage`; nothing is sent anywhere.
 - **On-screen keyboard** — colour-coded by finger, highlights the next key to
   press, lights up the physical key you actually hit, and is clickable so the
   course also works on tablets.
+- **Controller view (optional)** — replaces the keyboard with a gamepad
+  diagram built from the [JK / PadMapper](../JK) typing profiles: see which
+  LB/RB/LT/RT combo to hold and which of A B X Y Start Guide to tap for the
+  next character. See [Gamepad typing](#gamepad-typing-controller-view) below.
 - **Live scoring** — WPM, net CPM, raw speed, accuracy, error count, elapsed /
   remaining time and percent complete, updated as you type. Time spent with the
   browser tab hidden is handed back to the run, so switching away mid-test does
@@ -71,6 +75,7 @@ Then visit <http://localhost:8000>.
 | `F5` | Options |
 | `Esc` | Leave a lesson / return to menu |
 | `F8` | Show / hide the on-screen keyboard |
+| `F7` | Toggle the gamepad controller view |
 | `F9` | Retry the current exercise |
 | `F10` | Next lesson |
 | `Backspace` | Erase a wrong character |
@@ -85,6 +90,41 @@ keystrokes still appears in the history but is never recorded as a best, so a
 couple of lucky keystrokes can't post a flawless score. For a lesson, the best
 WPM and its matching accuracy always come from the same run.
 
+## Gamepad typing (controller view)
+
+The sibling [JK](../JK) project (PadMapper) turns any standard-layout gamepad
+into a keyboard: hold a combo of **LB / RB / LT / RT** to pick a row, then tap
+**A B X Y Start Guide** with the right thumb; **L3** is Shift and the D-pad is
+Backspace / Esc / Space / Enter. Since that app injects real keystrokes, this
+tutor scores pad input exactly like typing — the controller view just shows
+you where every character lives on the pad.
+
+Turn it on in **Options** or with **`F7`**: the on-screen keyboard is replaced
+by a gamepad diagram. It always shows the row the *next* character is in,
+marks the buttons you must hold, pulses the face key to tap (plus L3 for
+capitals and shifted symbols), and flashes the slot every typed key came
+from. The English course drives the `Typing` profile, the Thai course drives
+`Typing_TH` (Kedmanee legends resolved through the app's own layout table,
+including the profile's internal Shift).
+
+### Updating the controller maps
+
+The diagram is generated from the profile files — it never parses TOML at
+runtime. When `Typing.toml` or `Typing_TH.toml` changes, re-run:
+
+```bash
+python tools/sync_padmap.py            # reads the JK repo next to this one
+python tools/sync_padmap.py D:\some\JK # or an explicit profile folder
+python tools/sync_padmap.py --check    # CI-style staleness check
+```
+
+and commit the regenerated `assets/js/padmap.js` (Python 3.11+, no
+dependencies). The script keeps every button binding that injects a key or a
+click — so re-tiered rows, moved Ctrl, new chords all show up automatically —
+and skips sticks, scrolling and profile-switching bindings, which the pad
+view has nothing to draw. Courses without a map in `TT.PADMAPS` simply keep
+the keyboard, and the Options switch disables itself.
+
 ## Project structure
 
 ```
@@ -97,13 +137,18 @@ WPM and its matching accuracy always come from the same run.
 │       ├── lessons.js      # course registry + English (QWERTY) lessons/tests
 │       ├── lessons-th.js   # Thai (Kedmanee) lessons/tests
 │       ├── keyboard.js     # physical key geometry, finger map, layouts
+│       ├── padmap.js       # GENERATED gamepad maps (from the JK profiles)
+│       ├── padview.js      # controller view: gamepad diagram + highlights
 │       ├── engine.js       # typing engine: validation, clustering, statistics
 │       └── app.js          # screens, scoring, storage, keyboard input
+└── tools/
+    └── sync_padmap.py      # regenerates padmap.js from Typing*.toml
 ```
 
 The `TT` global is assembled across the script files in load order (see the
 `<script>` tags at the bottom of `index.html`): lesson data, then the keyboard
-model, then the engine, then the application shell.
+model, then the gamepad maps and controller view, then the engine, then the
+application shell.
 
 ## Browser support
 
