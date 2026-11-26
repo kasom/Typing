@@ -43,9 +43,15 @@ window.TT = window.TT || {};
   }
 
   /* the map for a course, or null when there is none (padview then falls back
-     to the keyboard - see app.js applyOpts) */
+     to the keyboard - see app.js applyOpts). A course without its own PADMAPS
+     entry may borrow one: gamepad courses declare pad: "en" / "th". */
   TT.padFor = function (courseId) {
-    var m = (TT.PADMAPS || {})[courseId];
+    var maps = TT.PADMAPS || {};
+    var m = maps[courseId];
+    if (!m) {
+      var c = (TT.COURSES || {})[courseId];
+      if (c && c.pad) m = maps[c.pad];
+    }
     return m && m.slots && m.slots.length ? m : null;
   };
 

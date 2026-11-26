@@ -58,6 +58,10 @@
         /* a stale or hand-edited profile must not leave the course picker blank */
         if (!TT.COURSES[opts.course]) opts.course = DEF_OPTS.course;
         if (DUR_OPTS.indexOf(opts.testdur) < 0) opts.testdur = DEF_DUR;
+        /* a gamepad course without the pad view is teaching a grid the
+           typist cannot see: opening one turns the view on (F7 still frees
+           it again mid-course for anyone who wants the keyboard) */
+        if ((TT.COURSES[opts.course] || {}).pad) opts.pad = true;
       }
       var h = JSON.parse(localStorage.getItem(K_HIST) || "null");
       if (Array.isArray(h)) history = h.map(fixRun).filter(Boolean);
@@ -1010,6 +1014,7 @@
       '<p class="dim">The interface, the menus and this help stay in English.</p></div>' +
       '<div class="panel"><h3>Gamepad typing (controller view)</h3>' +
       "<p>Switch on <b>Controller view</b> in Options (or press <kbd>F7</kbd>) and the on-screen keyboard is replaced by a gamepad diagram: it shows the six tap keys <b>A B X Y Start Guide</b> with the characters of the row the next character lives in, marks the <b>LB RB LT RT</b> buttons to hold, and lights the slot a typed key came from.</p>" +
+      "<p>The <b>Gamepad English</b> and <b>Gamepad ไทย</b> courses teach the pad's grid in its own order: the tap-only row first (<span class=\"hi\">e t a o i n</span> / <span class=\"hi\">ร น ก อ ง ม</span>), then one held row per lesson (LB, RB, LT, RT), capitals on L3, then the two-hold digit and punctuation rows and the three-hold rarities. Switch course with the pill at the right of the menu bar; a gamepad course opens the controller view for you.</p>" +
       "<p>The page still only sees ordinary keystrokes - you need the <b>JK / PadMapper</b> app running with the <b>Typing</b> (English) or <b>Typing_TH</b> (Thai) profile active, which turns a standard-layout gamepad into a keyboard. Hold the finger combo, tap the face key with the right thumb, and <kbd>L3</kbd> (left stick click) is Shift. The D-pad is Backspace / Esc / Space / Enter. Details in the app's TYPING.md.</p>" +
       "<p>The diagram is generated from those two profile files by <code>tools/sync_padmap.py</code>; when the profiles change, re-run the script to update the view. Until you reach the keys a lesson needs, accuracy will look impossible: that is the pad's grid, not your fault - the layers are shown so the combos become muscle memory.</p>" +
       "</div>" +
@@ -1043,6 +1048,8 @@
   }
   function setCourse(id) {
     opts.course = id;
+    /* see load(): gamepad courses imply the pad view */
+    if ((TT.COURSES[id] || {}).pad) opts.pad = true;
     saveOpts();
     TT.setCourse(id);
     /* the drill editor follows the course, as its records already do */

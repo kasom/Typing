@@ -12,11 +12,14 @@ locally in your browser via `localStorage`; nothing is sent anywhere.
 
 ## Features
 
-- **Two courses** — English on QWERTY and Thai on Kedmanee (TIS 820). Switch
+- **Four courses** — English on QWERTY and Thai on Kedmanee (TIS 820), plus
+  **Gamepad English** and **Gamepad ไทย**, which teach the same alphabets in
+  the gamepad grid's order (tap row first, one held row per lesson). Switch
   from the menu-bar pill or in Options; records are kept per course.
-- **10 English lessons, 13 Thai lessons, 4 timed tests per course** — a lesson
-  unlocks the next one once you hit its target speed at its target accuracy or
-  better (every lesson in the shipped course data asks for 95%).
+- **10 English lessons, 13 Thai lessons, 8 + 10 gamepad lessons, 4 timed
+  tests per course** — a lesson unlocks the next one once you hit its target
+  speed at its target accuracy or better (every lesson in the shipped course
+  data asks for 95%).
 - **On-screen keyboard** — colour-coded by finger, highlights the next key to
   press, lights up the physical key you actually hit, and is clickable so the
   course also works on tablets.
@@ -107,6 +110,19 @@ from. The English course drives the `Typing` profile, the Thai course drives
 `Typing_TH` (Kedmanee legends resolved through the app's own layout table,
 including the profile's internal Shift).
 
+### Pad-first courses
+
+`asdf`-style home-row ordering is meaningless on a pad, so two extra courses
+teach the grid in effort order instead: **Gamepad English** starts on the
+tap-only row (`e t a o i n` — nothing held), then one held row per lesson
+(LB `s r h l d c`, RB `u m f p g w`, LT `y b v k j x`, RT `q z`), capitals
+via L3, and the two-finger digit/punctuation rows last. **Gamepad ไทย**
+mirrors the `Typing_TH` tiering: `ร น ก อ ง ม` first, then the LB/RB
+consonant rows, the LT vowel signs, the RT long and pre-posed vowels, the
+RB+RT tone marks, two-hold consonants, three-hold rarities and the Thai-digit
+rows. Switch with the menu-bar pill; a gamepad course turns the controller
+view on for you, and its records are kept apart from the keyboard courses'.
+
 ### Updating the controller maps
 
 The diagram is generated from the profile files — it never parses TOML at
@@ -136,6 +152,8 @@ the keyboard, and the Options switch disables itself.
 │   └── js/
 │       ├── lessons.js      # course registry + English (QWERTY) lessons/tests
 │       ├── lessons-th.js   # Thai (Kedmanee) lessons/tests
+│       ├── lessons-pad.js  # Gamepad English course (pad-grid order)
+│       ├── lessons-pad-th.js # Gamepad ไทย course (pad-grid order)
 │       ├── keyboard.js     # physical key geometry, finger map, layouts
 │       ├── padmap.js       # GENERATED gamepad maps (from the JK profiles)
 │       ├── padview.js      # controller view: gamepad diagram + highlights
